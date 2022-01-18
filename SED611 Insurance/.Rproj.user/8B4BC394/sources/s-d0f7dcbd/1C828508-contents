@@ -1,0 +1,133 @@
+# Load libraries
+library(ggplot2)
+library(ggthemes)
+library(psych)
+library(relaimpo)
+library(tidyverse)
+
+# Read in our dataset
+insurance <- read.csv("insurance.csv")
+
+# Structure dataset
+head(insurance)
+str(insurance)
+summary(insurance)
+describe(insurance)
+
+#**------------------------------------------------------------------------------------------------***
+summary(insurance$charges)
+
+par(mfrow = c(1,2)) # combine the two plots
+hist(insurance$charges, main = "Histogram of charges", col = "lightblue")
+plot(density(insurance$charges), main = "Density plot of charges")
+polygon(density(insurance$charges), col = "orange")
+
+#**------------------------------------------------------------------------------------------------***
+
+#Correlation between Charges and Age
+ggplot(insurance, aes(age, charges)) +
+  geom_jitter(color = "IndianRed", alpha = 0.5) +
+  ylab("Charges (USD$)")+
+  ggtitle("Boxplot: Charges and Age") +
+  theme_light()
+
+#Correlation between Charges and BMI
+ggplot(insurance, aes(bmi, charges)) +
+  geom_jitter(color = "red", alpha = 0.5) +
+  ylab("Charges (USD$)")+
+  ggtitle("Boxplot: Charges and BMI") +
+  theme_light()
+
+#Correlation between Charges and Gender
+ggplot(insurance, aes(sex, charges)) +
+  geom_jitter(aes(color = sex), alpha = 0.7) +
+  ylab("Charges (USD$)")+
+  ggtitle("Correlation between Charges and Gender") +
+  theme_light()
+
+#Correlation between Charges and Children
+ggplot(insurance, aes(children, charges)) +
+  geom_jitter(aes(color = children), alpha = 0.7) +
+  ylab("Charges (USD$)")+
+  ggtitle("Correlation between Charges and Children") +
+  theme_light()
+
+#Correlation between Charges and smoker
+ggplot(insurance, aes(smoker, charges)) +
+  geom_jitter(aes(color = smoker), alpha = 0.7) +
+  ylab("Charges (USD$)")+
+  ggtitle("Correlation between Charges and smoker") +
+  theme_light()
+
+#Correlation between Charges and region
+ggplot(insurance, aes(region, charges)) +
+  geom_jitter(aes(color = region), alpha = 0.7) +
+  ylab("Charges (USD$)")+
+  ggtitle("Correlation between Charges and region") +
+  theme_light()
+
+
+
+#**------------------------------------------------------------------------------------------------***
+#**------------------------------------------------------------------------------------------------***
+insurance$smoker <- insurance$smoker
+for (i in 1:length(insurance$smoker)){
+  if (insurance$smoker[i] == "yes"){
+    insurance$smoker[i] = 1
+  } else {
+    insurance$smoker[i] = 0
+  }
+}
+str(insurance)
+insurance$smoker<-as.numeric(insurance$smoker) 
+
+
+# lm all column 
+mul_model <- lm(charges ~ age + sex + bmi + children + smoker + region, data = insurance)
+# mul_model_ <- lm(charges ~ ., data = insurance_new)
+summary(mul_model)
+
+# column that have significance
+mul_model <- lm(charges ~ age + bmi + children + smoker, data = insurance)
+# mul_model_ <- lm(charges ~ ., data = insurance_new)
+summary(mul_model)
+sqrt(0.7489)
+
+insurance$Multi <- -12102.77 + 257.85*insurance$age + 321.85*insurance$bmi + 
+  473.50*insurance$children + 23811.40*insurance$smoker 
+
+insurance$prediction <- predict(mul_model, newdata = insurance)
+
+insurance$prediction <- predict(mul_model, newdata = insurance)
+ggplot(insurance, aes(x = prediction, y = charges)) + 
+  geom_point(color = "blue", alpha = 0.7) + 
+  geom_abline(color = "red") +
+  ggtitle("Multiple linear regression")
+
+
+
+
+
+insurance %>%
+  ggplot(aes(x=smoker, y = charges)) +
+  geom_boxplot() + #smokers associated with ~$30,000 higher mean charge amount
+  ggtitle("Charges for Smokers vs Non-Smokers")
+
+insurance %>%
+  ggplot(aes(x=age, y = charges)) + 
+  geom_point(aes(color = smoker)) + #upward trend with age; appears to be four different groups of data; two within each category of smoker 
+  ggtitle("Charges vs Age")
+insurance %>%
+  ggplot(aes(x=age, y = charges)) + 
+  geom_point(aes(color = smoker, size = bmi, alpha = .05)) + #four groups: smoker with high BMI, non-smoker with high BMI, smoker with low BMI and non-smoker with low BMI --> could indicate that there needs to be an interaction term between BMI and Smoker. 
+  ggtitle("Variables is related to the amount of charges")
+
+insurance %>%
+  ggplot(aes(x=as.factor(children), y = charges)) + 
+  geom_boxplot() + #no obvious trend between children and charges
+  ggtitle("Charges vs Number of Children")
+
+insurance %>%
+  ggplot(aes(x= sex, y = charges)) + 
+  geom_boxplot() + #no difference in means; male has interquartile range
+  ggtitle("Charges for Males vs Females")
