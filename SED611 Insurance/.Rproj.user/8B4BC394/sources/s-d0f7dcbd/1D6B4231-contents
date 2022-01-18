@@ -1,0 +1,71 @@
+# Load libraries
+library(ggplot2)
+library(ggthemes)
+library(psych)
+library(relaimpo)
+library(tidyverse)
+
+# Read in our dataset
+df <- read.csv("insurance.csv")
+
+# Structure dataset
+head(df)
+str(df)
+summary(df)
+describe(df)
+
+
+#-------------------------------Charges Distribution------------------------------------#
+summary(df$charges)
+
+ggplot(df, aes(x=charges))+
+  geom_histogram(color="black", fill="Thistle", bins=40)+
+  geom_vline(aes(xintercept= 13270), color="blue", linetype="dashed", size=1)+
+  geom_vline(aes(xintercept= 9382), color="red", linetype="dashed", size=1)+
+  annotate("text", x= 20000, y=110, size=5, label="Mean=13270", color="blue")+
+  annotate("text", x= 20000, y=120, size=5, label="Median=9382", color="red")
+
+# Boxplot: smoker
+ggplot(df, aes(x=smoker, y=charges)) +
+  geom_boxplot(fill=c(2:3))+
+  stat_summary(fun=mean, geom="point", color="blue")+
+  coord_flip()
+
+# Boxplot: region
+ggplot(df, aes(x=region, y=charges)) +
+  geom_boxplot(fill=c(2:5))+
+  stat_summary(fun=mean, geom="point", color="blue")+
+  coord_flip()
+
+
+df %>%
+  group_by(smoker) %>%
+  summarise(
+    count = n(),
+    min = min(charges),
+    median = median(charges),
+    max = max(charges),
+    IQR = IQR(charges)
+  ) %>%
+  arrange(desc(median))
+
+wilcox.test(df$charges ~ df$smoker)
+
+##-------------------------------------------------------------------------------------##
+# pop smoker yes
+smoker_yes <- subset(df,smoker == "yes")
+summary(smoker_yes)
+var(smoker_yes$charges)
+
+##-------------------------------------------------------------------------------------##
+# pop smoker no
+smoker_no <- subset(df,smoker == "no")
+summary(smoker_no)
+var(smoker_no$charges)
+
+#Compute the observed  z-statistic
+z = (32050 - 8434)/sqrt((var(smoker_yes$charges)/274)+(var(smoker_no$charges)/1064))
+print(z)
+
+          
+          
