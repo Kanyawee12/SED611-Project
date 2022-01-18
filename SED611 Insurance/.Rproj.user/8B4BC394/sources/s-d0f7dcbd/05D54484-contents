@@ -1,0 +1,85 @@
+# Load libraries
+library(ggplot2)
+library(ggthemes)
+library(psych)
+library(relaimpo)
+library(tidyverse)
+library(dplyr)
+
+# Read in our dataset
+df <- read.csv("insurance.csv")
+df <- tibble::rowid_to_column(df, "ID")
+
+# Structure dataset
+head(df)
+str(df)
+summary(df)
+describe(df)
+
+##-------------------------------------------------------------------------------------##
+# pop smoker yes
+smoker_yes <- subset(df,smoker == "yes")
+summary(smoker_yes)
+
+##-------------------------------------------------------------------------------------##
+# pop smoker no
+smoker_no <- subset(df,smoker == "no")
+summary(smoker_no)
+
+set.seed(612)
+test_no <- sample(nrow(smoker_no), 10)
+sort(test_no)
+test_yes <- sample(nrow(smoker_yes), 10)
+sort(test_yes)
+test <- c(test_no,test_yes)
+sort(test)
+
+# keep just the test data points/rows
+all_test <- df[test,-1]
+all_train <- df[-(test), -1]
+
+df %>%
+
+#use the kknn package
+library(kknn)
+
+# build the knn model
+# Check the data structure
+str(all_train)
+str(all_test)
+
+# first, change the "smoker" variable to be of a factor type
+all_train$smoker <- as.factor(all_train$smoker)
+all_test$smoker <- as.factor((all_test$smoker))
+# verify the change
+str(all_train)
+str(all_test)
+
+# run a weighted k-NN / first use dataset train
+model_knn = train.kknn(smoker ~ ., data=all_train,kmax=9) #.=use all column
+
+# see the model's details
+model_knn
+summary(model_knn)
+
+# Do a prediction on the test data
+prediction <- predict(model_knn, all_test[, -5])
+prediction
+
+# See a confusion matrix. Each column of the matrix represents
+# the number of predictions of each class, 
+# while each row represents the instances in the actual class
+CM <- table(all_test[, 5], prediction)
+CM
+
+#*********************************************************************
+#install required packages
+install.packages('gmodels')
+#import required library 
+library(gmodels)
+
+#Computes the crosstable calculations
+CrossTable(all_test[, 5],prediction)
+
+
+
